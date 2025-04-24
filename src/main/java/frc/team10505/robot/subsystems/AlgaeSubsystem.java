@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class AlgaeSubsystem extends SubsystemBase {
@@ -31,6 +32,12 @@ public class AlgaeSubsystem extends SubsystemBase {
     private final int kAlgaePivotMotorID = 1;
 
     private final double startingAngle = 0.0;
+
+    /* Intake Speeds */
+    private double intakeSpeed = 15;
+    private double intakeSpeedSlow = 10;
+    private double intakeStop = 0;
+
     private double pivotSetPoint = 90.0;
     private double absoluteOffset = 180.0;
     private double encoderValue;
@@ -41,9 +48,6 @@ public class AlgaeSubsystem extends SubsystemBase {
     private final static int pivotEncoderScale = 360;
     private final static int pivotEncoderOffset = 0;
 
-
-
-
     /* Motor Ids */
     private SparkMax pivotMotor = new SparkMax(kAlgaePivotMotorID, MotorType.kBrushless);
     private SparkAbsoluteEncoder pivotEncoder = pivotMotor.getAbsoluteEncoder();
@@ -52,7 +56,6 @@ public class AlgaeSubsystem extends SubsystemBase {
     private SparkMaxConfig intakeMotorConfig = new SparkMaxConfig();
     private SparkMaxConfig simPivotMotorConfig = new SparkMaxConfig();
     private SparkMaxConfig simIntakeMotorConfig = new SparkMaxConfig();
-
 
     /* PID FeedFoward */
     private PIDController pivotController = new PIDController(0, 0, 0);
@@ -68,14 +71,11 @@ public class AlgaeSubsystem extends SubsystemBase {
             SingleJointedArmSim.estimateMOI(0.305, 2), 0.305, Units.degreesToRadians(-110), Units.degreesToRadians(110),
             true, Units.degreesToRadians(startingAngle));
 
-
-
-
     public AlgaeSubsystem() {
         if (Utils.isSimulation()) {
             pivotController = new PIDController(0, 0, 0);
             pivotFeedForward = new ArmFeedforward(0, 0, 0, 0);
-            
+
             pivotMotor = new SparkMax(kAlgaePivotMotorID, MotorType.kBrushless);
             intakeMotor = new SparkMax(kAlgaeIntakeMotorID, MotorType.kBrushless);
             pivotMotorConfig = new SparkMaxConfig();
@@ -101,50 +101,89 @@ public class AlgaeSubsystem extends SubsystemBase {
         intakeMotorConfig.smartCurrentLimit(kIntakeMotorCurrentLimit,
                 kIntakeMotorCurrentLimit);
         intakeMotor.configure(intakeMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        }
-
-
-
-
-
-        public double getPivotEncoder() {
-            return (-pivotEncoder.getPosition() + absoluteOffset);
-        }
-
-        public double GetEffort() {
-            return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0)
-            + pivotController.calculate(getPivotEncoder(), pivotSetPoint);
-        }
-
-        public double simGetEffort() {
-            return simPivotFeedForward.calculate(Units.degreesToRadians(pivotViz.getAngle()), 0) 
-            + simPivotController.calculate(simEncoder, pivotSetPoint);
-        }
-
-
-
-
-
-        @Override
-        public void periodic() {
-            encoderValue = getPivotEncoder();
-            SmartDashboard.putNumber("pivotEncoder", encoderValue);
-            SmartDashboard.putNumber("Intake Motor Output", intakeMotor.getAppliedOutput());
-            SmartDashboard.putNumber("Pivot Motor Output", pivotMotor.getAppliedOutput());
-            if (Utils.isSimulation()) {
-                simEncoder = pivotViz.getAngle();
-                pivotSim.setInput(simGetEffort());
-                pivotSim.update(0.01);
-                pivotViz.setAngle(Units.radiansToDegrees(pivotSim.getAngleRads()));
-
-
-            }
-        }
-
-
     }
 
-   
+    /* Fancy PID/FeedFoward Stuff */
 
+    public double getPivotEncoder() {
+        return (-pivotEncoder.getPosition() + absoluteOffset);
+    }
 
+    public double GetEffort() {
+        return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0)
+                + pivotController.calculate(getPivotEncoder(), pivotSetPoint);
+    }
 
+    public double simGetEffort() {
+        return simPivotFeedForward.calculate(Units.degreesToRadians(pivotViz.getAngle()), 0)
+                + simPivotController.calculate(simEncoder, pivotSetPoint);
+    }
+
+    /* Pivot Commands to Referance */
+
+    public Command setAngle(double angle) {
+        return runOnce(() -> {
+            pivotSetPoint = angle;
+        });
+    }
+
+    public Command setVoltage(double voltage) {
+        return run(() -> {
+            pivotMotor.setVoltage(voltage);
+        });
+    }
+
+    public Command stopPivot() {
+        return run(() -> {
+            pivotMotor.stopMotor();
+        });
+    }
+
+    /* Intake Commands to Referance */
+
+    public Command intakeFoward() {
+        return runOnce(() -> {
+            intakeMotor.set(intakeSpeed);
+        });
+    }
+
+    public Command intakeFowardSlow() {
+        return runOnce(() -> {
+            intakeMotor.set(intakeSpeedSlow);
+        });
+    }
+
+    public Command intakeBackward() {
+        return runOnce(() -> {
+            intakeMotor.set(-intakeSpeed);
+        });
+    }
+
+    public Command intakeBackwardSlow() {
+        return runOnce(() -> {
+            intakeMotor.set(-intakeSpeedSlow);
+        });
+    }
+
+    public Command intakeStop() {
+        return runOnce(() -> {
+            intakeMotor.set(intakeStop);
+        });
+    }
+
+    @Override
+    public void periodic() {
+        encoderValue = getPivotEncoder();
+        SmartDashboard.putNumber("pivotEncoder", encoderValue);
+        SmartDashboard.putNumber("Intake Motor Output", intakeMotor.getAppliedOutput());
+        SmartDashboard.putNumber("Pivot Motor Output", pivotMotor.getAppliedOutput());
+        if (Utils.isSimulation()) {
+            simEncoder = pivotViz.getAngle();
+            pivotSim.setInput(simGetEffort());
+            pivotSim.update(0.01);
+            pivotViz.setAngle(Units.radiansToDegrees(pivotSim.getAngleRads()));
+
+        }
+    }
+
+}
