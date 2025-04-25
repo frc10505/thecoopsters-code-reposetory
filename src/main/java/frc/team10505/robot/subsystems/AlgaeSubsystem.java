@@ -185,7 +185,7 @@ public class AlgaeSubsystem extends SubsystemBase {
         return run(() -> {
             intakeMotor.set(intakeSpeed);
             intakeMotor.set(-intakeSpeed);
-            intakeMotor.set(intakeSpeed);
+            intakeMotor.set(Math.random() * 10);
             intakeMotor.set(-intakeSpeed);
         });
     }
