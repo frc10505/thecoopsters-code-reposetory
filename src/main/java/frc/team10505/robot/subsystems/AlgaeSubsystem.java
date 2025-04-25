@@ -139,6 +139,15 @@ public class AlgaeSubsystem extends SubsystemBase {
         });
     }
 
+    public Command pivotSpaz() {
+        return run(() -> {
+            pivotMotor.setVoltage(20);
+            pivotMotor.setVoltage(0);
+            pivotMotor.setVoltage(5);
+            pivotMotor.setVoltage(10);
+        });
+    }
+
     /* Intake Commands to Referance */
 
     public Command intakeFoward() {
@@ -168,6 +177,16 @@ public class AlgaeSubsystem extends SubsystemBase {
     public Command intakeStop() {
         return runOnce(() -> {
             intakeMotor.set(intakeStop);
+        });
+    }
+
+
+    public Command intakeSpaz() {
+        return run(() -> {
+            intakeMotor.set(intakeSpeed);
+            intakeMotor.set(-intakeSpeed);
+            intakeMotor.set(intakeSpeed);
+            intakeMotor.set(-intakeSpeed);
         });
     }
 
