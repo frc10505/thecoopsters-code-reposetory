@@ -180,7 +180,6 @@ public class AlgaeSubsystem extends SubsystemBase {
         });
     }
 
-
     public Command intakeSpaz() {
         return run(() -> {
             intakeMotor.set(intakeSpeed);
