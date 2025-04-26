@@ -5,49 +5,77 @@
 package frc.team10505.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 /**
- * The methods in this class are called automatically corresponding to each mode, as described in
- * the TimedRobot documentation. If you change the name of this class or the package after creating
+ * The methods in this class are called automatically corresponding to each
+ * mode, as described in
+ * the TimedRobot documentation. If you change the name of this class or the
+ * package after creating
  * this project, you must also update the Main.java file in the project.
  */
 public class Robot extends TimedRobot {
   /**
-   * This function is run when the robot is first started up and should be used for any
+   * This function is run when the robot is first started up and should be used
+   * for any
    * initialization code.
    */
-  public Robot() {}
+
+  private final RobotContainer robotContainer = new RobotContainer();
+  private Command autonomousCommand;
+
+  public Robot() {
+  }
 
   @Override
-  public void robotPeriodic() {}
+  public void robotInit() {
+
+  }
 
   @Override
-  public void autonomousInit() {}
+  public void robotPeriodic() {
+    CommandScheduler.getInstance().run();
+
+  }
 
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousInit() {
+  }
 
   @Override
-  public void teleopInit() {}
+  public void autonomousPeriodic() {
+  }
 
   @Override
-  public void teleopPeriodic() {}
+  public void teleopInit() {
+  }
 
   @Override
-  public void disabledInit() {}
+  public void teleopPeriodic() {
+  }
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledInit() {
+  }
 
   @Override
-  public void testInit() {}
+  public void disabledPeriodic() {
+  }
 
   @Override
-  public void testPeriodic() {}
+  public void testInit() {
+  }
 
   @Override
-  public void simulationInit() {}
+  public void testPeriodic() {
+  }
 
   @Override
-  public void simulationPeriodic() {}
+  public void simulationInit() {
+  }
+
+  @Override
+  public void simulationPeriodic() {
+  }
 }

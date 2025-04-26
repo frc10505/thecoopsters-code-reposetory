@@ -13,12 +13,31 @@ public class RobotContainer {
     /* Subsystems */
     private final AlgaeSubsystem algaeSubsys = new AlgaeSubsystem();
 
+    private void simConfigAlgaeButtonBindings() {
+        if (Utils.isSimulation()) {
+            joystick.button(1).onTrue(algaeSubsys.setAngle(5));
+            joystick.button(2).onTrue(algaeSubsys.setAngle(15));
+            joystick.button(3).onTrue(algaeSubsys.setAngle(25));
+            joystick.button(4).onTrue(algaeSubsys.setAngle(25));
+        }
+    }
+
     private void configAlgaeButtonBindings() {
         if (Utils.isSimulation()) {
             joystick.button(1).onTrue(algaeSubsys.setAngle(5));
             joystick.button(2).onTrue(algaeSubsys.setAngle(15));
             joystick.button(3).onTrue(algaeSubsys.setAngle(25));
             joystick.button(4).onTrue(algaeSubsys.setAngle(25));
+        }
+    }
+
+    public RobotContainer() {
+        if (Utils.isSimulation()) {
+            simConfigAlgaeButtonBindings();
+
+        } else {
+            configAlgaeButtonBindings();
+
         }
     }
 
