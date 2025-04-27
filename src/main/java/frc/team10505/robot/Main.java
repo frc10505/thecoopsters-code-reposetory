@@ -10,11 +10,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 
 public final class Main {
 
-  public Main() {
-
-  }
-
-  public final RobotContainer robotContainer = new RobotContainer();
+  public Main() {}
 
   public static void main(String... args) {
     RobotBase.startRobot(Robot::new);
