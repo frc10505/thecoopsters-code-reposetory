@@ -22,7 +22,7 @@ public class Robot extends TimedRobot {
    * initialization code.
    */
 
-  private final RobotContainer robotContainer = new RobotContainer();
+  private RobotContainer robotContainer = new RobotContainer();
   private Command autonomousCommand;
 
   public Robot() {

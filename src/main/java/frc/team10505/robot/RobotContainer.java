@@ -15,10 +15,10 @@ public class RobotContainer {
 
     private void simConfigAlgaeButtonBindings() {
         if (Utils.isSimulation()) {
-            joystick.button(1).onTrue(algaeSubsys.setAngle(5));
-            joystick.button(2).onTrue(algaeSubsys.setAngle(15));
-            joystick.button(3).onTrue(algaeSubsys.setAngle(25));
-            joystick.button(4).onTrue(algaeSubsys.setAngle(25));
+            joystick.button(1).onTrue(algaeSubsys.setAngle(0));
+            joystick.button(2).onTrue(algaeSubsys.setAngle(45));
+            joystick.button(3).onTrue(algaeSubsys.setAngle(-90));
+            joystick.button(4).onTrue(algaeSubsys.setAngle(90));
         }
     }
 
