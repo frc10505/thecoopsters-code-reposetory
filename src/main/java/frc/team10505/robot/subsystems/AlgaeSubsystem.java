@@ -3,6 +3,7 @@ package frc.team10505.robot.subsystems;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.fasterxml.jackson.databind.cfg.ConstructorDetector.SingleArgConstructor;
 import com.revrobotics.sim.SparkAbsoluteEncoderSim;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
@@ -14,13 +15,16 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -40,7 +44,9 @@ public class AlgaeSubsystem extends SubsystemBase {
     private double intakeSpeed = 15;
     private double intakeSpeedSlow = 10;
     private double intakeStop = 0;
+    private double simMotorSpeed = 30;
 
+    /* Pivot Stuff */
     private double pivotSetPoint = 90.0;
     private double absoluteOffset = 180.0;
     private double encoderValue;
@@ -63,10 +69,10 @@ public class AlgaeSubsystem extends SubsystemBase {
     /* PID FeedFoward */
     private PIDController pivotController;// = new PIDController(0, 0, 0);
     private ArmFeedforward pivotFeedForward;// = new ArmFeedforward(0, 0, 0, 0);
-    //private PIDController simPivotController = new PIDController(0, 0, 0);
-    //private ArmFeedforward simPivotFeedForward = new ArmFeedforward(0, 0, 0, 0);
+    // private PIDController simPivotController = new PIDController(0, 0, 0);
+    // private ArmFeedforward simPivotFeedForward = new ArmFeedforward(0, 0, 0, 0);
 
-    /* Fancy Sim stuff */
+    /* Pivot Sim */
     private final Mechanism2d pivotMech = new Mechanism2d(2, 2.5);
     private MechanismRoot2d pivotRoot = pivotMech.getRoot("pivotRoot", 1, 1.25);
     private MechanismLigament2d pivotViz = pivotRoot.append(new MechanismLigament2d("pivotViz", 0.75, startingAngle));
@@ -74,11 +80,22 @@ public class AlgaeSubsystem extends SubsystemBase {
             SingleJointedArmSim.estimateMOI(0.305, 2), 0.305, Units.degreesToRadians(-110), Units.degreesToRadians(110),
             true, Units.degreesToRadians(startingAngle));
 
+    /* Intake Sim */
+    private final Mechanism2d intakeMech = new Mechanism2d(2, 2.5);
+    private MechanismRoot2d intakeRoot = intakeMech.getRoot("intakeRoot", 1, 1.25);
+    private MechanismLigament2d intakeViz1 = intakeRoot
+            .append(new MechanismLigament2d("intakeViz1", 0.4, startingAngle));
+    private MechanismLigament2d intakeViz2 = intakeRoot
+            .append(new MechanismLigament2d("intakeViz2", -0.4, startingAngle));
+    private FlywheelSim intakeSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), 0.05, 2),
+            DCMotor.getNEO(1), 0);
+
     public AlgaeSubsystem() {
         SmartDashboard.putData("Pivot sim", pivotMech);
+        SmartDashboard.putData("intake sim ", intakeMech);
 
         if (Utils.isSimulation()) {
-            pivotController = new PIDController(1.25, 0, 0.01); //kp 1.35 Kd 0 = gooder
+            pivotController = new PIDController(1.25, 0, 0.01); // kp 1.35 Kd 0 = gooder
             pivotFeedForward = new ArmFeedforward(0, 0.17227, 0.2, 0.2);
 
             // pivotMotor = new SparkMax(kAlgaePivotMotorID, MotorType.kBrushless);
@@ -89,8 +106,8 @@ public class AlgaeSubsystem extends SubsystemBase {
         } else {
             pivotMotor = new SparkMax(kAlgaePivotMotorID, MotorType.kBrushless);
             intakeMotor = new SparkMax(kAlgaeIntakeMotorID, MotorType.kBrushless);
-            pivotController = new PIDController(0, 0, 0);
-            pivotFeedForward = new ArmFeedforward(0, 0, 0, 0);
+            pivotController = new PIDController(1.25, 0, 0.01);
+            pivotFeedForward = new ArmFeedforward(0, 0.17227, 0.2, 0.2);
         }
         // Pivot motor config
         pivotMotorConfig.idleMode(IdleMode.kBrake);
@@ -109,15 +126,13 @@ public class AlgaeSubsystem extends SubsystemBase {
     /* Fancy PID/FeedFoward Stuff */
 
     public double getPivotEncoder() {
-        if (Utils.isSimulation()){
+        if (Utils.isSimulation()) {
             return pivotViz.getAngle();
         } else {
             return (-pivotEncoder.getPosition() + absoluteOffset);
 
         }
-    } 
-
-    
+    }
 
     public double getEffort() {
         return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0)
@@ -155,10 +170,22 @@ public class AlgaeSubsystem extends SubsystemBase {
 
     /* Intake Commands to Referance */
 
-    public Command intakeFoward() {
-        return runOnce(() -> {
-            intakeMotor.set(intakeSpeed);
-        });
+    public Command runIntake(double speed) {
+        if (Utils.isSimulation()) {
+            return runEnd(() -> {
+                simMotorSpeed = speed;
+            }, () -> {
+                simMotorSpeed = 0;
+            });
+        } else {
+            return runEnd(() -> {
+                intakeMotor.set(speed);
+
+            }, () -> {
+                intakeMotor.set(0);
+
+            });
+        }
     }
 
     public Command intakeFowardSlow() {
@@ -201,13 +228,13 @@ public class AlgaeSubsystem extends SubsystemBase {
             simEncoder = pivotViz.getAngle();
             pivotSim.setInput(getEffort());
             pivotSim.update(0.01);
-            
             pivotViz.setAngle(Units.radiansToDegrees(pivotSim.getAngleRads()));
             encoderValue = getPivotEncoder();
+            intakeSim.update(0.01);
+
             SmartDashboard.putNumber("pivotEncoder", encoderValue);
             SmartDashboard.putNumber("Intake Motor Output", intakeMotor.getAppliedOutput());
             SmartDashboard.putNumber("Pivot Motor Output", pivotMotor.getAppliedOutput());
-            
 
         }
     }

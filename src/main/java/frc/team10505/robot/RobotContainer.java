@@ -13,7 +13,8 @@ public class RobotContainer {
     /* Subsystems */
     private final AlgaeSubsystem algaeSubsys = new AlgaeSubsystem();
 
-    private void simConfigAlgaeButtonBindings() {
+    /* Algae Pivot Controls Sim */
+    private void simConfigAlgaePivotButtonBindings() {
         if (Utils.isSimulation()) {
             joystick.button(1).onTrue(algaeSubsys.setAngle(90));
             joystick.button(2).onTrue(algaeSubsys.setAngle(45));
@@ -22,7 +23,8 @@ public class RobotContainer {
         }
     }
 
-    private void configAlgaeButtonBindings() {
+    /* Algae Pivot Controls */
+    private void configAlgaePivotButtonBindings() {
         if (Utils.isSimulation()) {
             joystick.button(1).onTrue(algaeSubsys.setAngle(5));
             joystick.button(2).onTrue(algaeSubsys.setAngle(15));
@@ -31,12 +33,23 @@ public class RobotContainer {
         }
     }
 
+    /* Algae Intake Controls Sim */
+    private void simConfigAlgaeIntakeButtonBindings() {
+        if (Utils.isSimulation()) {
+            joystick2.button(1).whileTrue(algaeSubsys.runIntake(30));
+            joystick2.button(2).whileTrue(algaeSubsys.runIntake(-30));
+            joystick2.button(3).onTrue(algaeSubsys.runIntake(0));
+
+        }
+    }
+
     public RobotContainer() {
         if (Utils.isSimulation()) {
-            simConfigAlgaeButtonBindings();
+            simConfigAlgaePivotButtonBindings();
+            simConfigAlgaeIntakeButtonBindings();
 
         } else {
-            configAlgaeButtonBindings();
+            configAlgaePivotButtonBindings();
 
         }
     }
