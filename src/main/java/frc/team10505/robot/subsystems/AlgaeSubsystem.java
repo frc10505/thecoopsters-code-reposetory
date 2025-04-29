@@ -78,7 +78,7 @@ public class AlgaeSubsystem extends SubsystemBase {
         SmartDashboard.putData("Pivot sim", pivotMech);
 
         if (Utils.isSimulation()) {
-            pivotController = new PIDController(0.3, 0, 0);
+            pivotController = new PIDController(1.25, 0, 0.01); //kp 1.35 Kd 0 = gooder
             pivotFeedForward = new ArmFeedforward(0, 0.17227, 0.2, 0.2);
 
             // pivotMotor = new SparkMax(kAlgaePivotMotorID, MotorType.kBrushless);
