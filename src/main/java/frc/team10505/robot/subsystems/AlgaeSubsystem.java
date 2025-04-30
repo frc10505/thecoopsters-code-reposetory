@@ -1,6 +1,8 @@
 
 package frc.team10505.robot.subsystems;
 
+import org.w3c.dom.Text;
+
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.fasterxml.jackson.databind.cfg.ConstructorDetector.SingleArgConstructor;
@@ -45,6 +47,7 @@ public class AlgaeSubsystem extends SubsystemBase {
     private double intakeSpeedSlow = 10;
     private double intakeStop = 0;
     private double simMotorSpeed = 30;
+    private double simSpeed = 0;
 
     /* Pivot Stuff */
     private double pivotSetPoint = 90.0;
@@ -87,7 +90,7 @@ public class AlgaeSubsystem extends SubsystemBase {
             .append(new MechanismLigament2d("intakeViz1", 0.4, startingAngle));
     private MechanismLigament2d intakeViz2 = intakeRoot
             .append(new MechanismLigament2d("intakeViz2", -0.4, startingAngle));
-    private FlywheelSim intakeSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), 0.05, 2),
+    private FlywheelSim intakeSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), 0.0000000001, 2),
             DCMotor.getNEO(1), 0);
 
     public AlgaeSubsystem() {
@@ -142,9 +145,10 @@ public class AlgaeSubsystem extends SubsystemBase {
     /* Pivot Commands to Referance */
 
     public Command setAngle(double angle) {
-        return runOnce(() -> {
+        return run(() -> {
             pivotSetPoint = angle;
         });
+
     }
 
     public Command setVoltage(double voltage) {
@@ -173,9 +177,9 @@ public class AlgaeSubsystem extends SubsystemBase {
     public Command runIntake(double speed) {
         if (Utils.isSimulation()) {
             return runEnd(() -> {
-                simMotorSpeed = speed;
+                simSpeed = speed;
             }, () -> {
-                simMotorSpeed = 0;
+                simSpeed = 0;
             });
         } else {
             return runEnd(() -> {
@@ -231,6 +235,11 @@ public class AlgaeSubsystem extends SubsystemBase {
             pivotViz.setAngle(Units.radiansToDegrees(pivotSim.getAngleRads()));
             encoderValue = getPivotEncoder();
             intakeSim.update(0.01);
+            intakeSim.setInput(simSpeed);
+            intakeViz1.setAngle(intakeViz1.getAngle() + intakeSim.getAngularVelocityRPM() * 0.05);
+            intakeViz2.setAngle(intakeViz2.getAngle() + intakeSim.getAngularVelocityRPM() * 0.05);
+            
+
 
             SmartDashboard.putNumber("pivotEncoder", encoderValue);
             SmartDashboard.putNumber("Intake Motor Output", intakeMotor.getAppliedOutput());
