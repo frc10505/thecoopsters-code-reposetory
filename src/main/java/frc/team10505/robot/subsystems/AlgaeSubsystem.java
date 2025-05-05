@@ -66,8 +66,7 @@ public class AlgaeSubsystem extends SubsystemBase {
     private SparkMax intakeMotor = new SparkMax(kAlgaeIntakeMotorID, MotorType.kBrushless);
     private SparkMaxConfig pivotMotorConfig = new SparkMaxConfig();
     private SparkMaxConfig intakeMotorConfig = new SparkMaxConfig();
-    private SparkMaxConfig simPivotMotorConfig = new SparkMaxConfig();
-    private SparkMaxConfig simIntakeMotorConfig = new SparkMaxConfig();
+    
 
     /* PID FeedFoward */
     private PIDController pivotController;// = new PIDController(0, 0, 0);
@@ -95,7 +94,7 @@ public class AlgaeSubsystem extends SubsystemBase {
 
     public AlgaeSubsystem() {
         SmartDashboard.putData("Pivot sim", pivotMech);
-        SmartDashboard.putData("intake sim ", intakeMech);
+        SmartDashboard.putData(" Algae intake sim ", intakeMech);
 
         if (Utils.isSimulation()) {
             pivotController = new PIDController(1.25, 0, 0.01); // kp 1.35 Kd 0 = gooder
@@ -191,7 +190,9 @@ public class AlgaeSubsystem extends SubsystemBase {
             });
         }
     }
+    
 
+    
     public Command intakeFowardSlow() {
         return runOnce(() -> {
             intakeMotor.set(intakeSpeedSlow);

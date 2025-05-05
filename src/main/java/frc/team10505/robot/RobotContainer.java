@@ -5,15 +5,20 @@ import com.ctre.phoenix6.Utils;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.team10505.robot.subsystems.AlgaeSubsystem;
+import frc.team10505.robot.subsystems.CoralSubsystem;
+import frc.team10505.robot.subsystems.ElevatorSubsystem;
 
 public class RobotContainer {
 
     private final CommandJoystick joystick = new CommandJoystick(0);
     private final CommandJoystick joystick2 = new CommandJoystick(1);
+    private final CommandJoystick joystick3 = new CommandJoystick(2);
     private final CommandXboxController xboxController = new CommandXboxController(1);
 
     /* Subsystems */
     private final AlgaeSubsystem algaeSubsys = new AlgaeSubsystem();
+    private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+    private final CoralSubsystem coralSubsystem = new CoralSubsystem();
 
     /* Algae Pivot Controls Sim */
     private void simConfigAlgaePivotButtonBindings() {
@@ -38,9 +43,18 @@ public class RobotContainer {
     /* Algae Intake Controls Sim */
     private void simConfigAlgaeIntakeButtonBindings() {
         if (Utils.isSimulation()) {
-            joystick2.button(1).onTrue(algaeSubsys.runIntake(1 * 2.2222));
-            joystick2.button(2).onTrue(algaeSubsys.runIntake(-1 * 2.2222));
+            joystick2.button(1).whileTrue(algaeSubsys.runIntake(1 * 2));
+            joystick2.button(2).whileTrue(algaeSubsys.runIntake(-1 * 2));
             joystick2.button(3).onTrue(algaeSubsys.runIntake(0));
+
+        }
+    }
+
+
+    private void simCoralButtonBindings() {
+        if (Utils.isSimulation()) {
+            joystick3.button(1).whileTrue(coralSubsystem.runIntake(15));
+           
 
         }
     }
@@ -49,6 +63,7 @@ public class RobotContainer {
         if (Utils.isSimulation()) {
             simConfigAlgaePivotButtonBindings();
             simConfigAlgaeIntakeButtonBindings();
+            simCoralButtonBindings();
 
         } else {
             configAlgaePivotButtonBindings();
