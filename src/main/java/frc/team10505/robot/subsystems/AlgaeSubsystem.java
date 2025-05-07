@@ -97,8 +97,8 @@ public class AlgaeSubsystem extends SubsystemBase {
         SmartDashboard.putData(" Algae intake sim ", intakeMech);
 
         if (Utils.isSimulation()) {
-            pivotController = new PIDController(1.25, 0, 0.01); // kp 1.35 Kd 0 = gooder
-            pivotFeedForward = new ArmFeedforward(0, 0.17227, 0.2, 0.2);
+            pivotController = new PIDController(1.25, 0, 0.01); //Gooder
+            pivotFeedForward = new ArmFeedforward(0, 0.17227, 0.2, 0.2); //Gooder
 
             // pivotMotor = new SparkMax(kAlgaePivotMotorID, MotorType.kBrushless);
             // intakeMotor = new SparkMax(kAlgaeIntakeMotorID, MotorType.kBrushless);
@@ -232,10 +232,10 @@ public class AlgaeSubsystem extends SubsystemBase {
         if (Utils.isSimulation()) {
             simEncoder = pivotViz.getAngle();
             pivotSim.setInput(getEffort());
-            pivotSim.update(0.01);
+            pivotSim.update(0.001);
             pivotViz.setAngle(Units.radiansToDegrees(pivotSim.getAngleRads()));
             encoderValue = getPivotEncoder();
-            intakeSim.update(0.01);
+            intakeSim.update(0.001);
             intakeSim.setInput(simSpeed);
             intakeViz1.setAngle(intakeViz1.getAngle() + intakeSim.getAngularVelocityRPM() * 0.05);
             intakeViz2.setAngle(intakeViz2.getAngle() + intakeSim.getAngularVelocityRPM() * 0.05);

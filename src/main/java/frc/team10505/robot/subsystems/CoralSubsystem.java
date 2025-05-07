@@ -35,6 +35,7 @@ public class CoralSubsystem extends SubsystemBase {
     private double intakeCoral = 20;
     private double outakeCoral = 40;
     private double simSpeed = 0;
+    private double secondarySimSpeed = 0;
 
     /* Motor Stuff */
     private final SparkMax leftIntakeMotor = new SparkMax(leftIntakeMotorId, MotorType.kBrushless);
@@ -44,19 +45,24 @@ public class CoralSubsystem extends SubsystemBase {
     private final Mechanism2d intakeMech = new Mechanism2d(4, 3);
     private MechanismRoot2d leftIntakeRoot = intakeMech.getRoot("leftIntakeRoot", 1, 1.5);
     private MechanismRoot2d rightIntakeRoot = intakeMech.getRoot("rightIntakeRoot", 3, 1.5);
-    
-    private MechanismLigament2d leftIntakeViz1 = leftIntakeRoot.append(new MechanismLigament2d("leftIntakeViz1", 0.5, 180));
-    private MechanismLigament2d leftIntakeViz2 = leftIntakeRoot.append(new MechanismLigament2d("leftIntakeViz2", -0.5, 180));
-    private MechanismLigament2d rightIntakeViz1 = rightIntakeRoot.append(new MechanismLigament2d("rightIntakeViz1", 0.5, 180));
-    private MechanismLigament2d rightIntakeViz2 = rightIntakeRoot.append(new MechanismLigament2d("rightIntakeViz2", -0.5, 180));
-    
-    private FlywheelSim intakeSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), 0.0000001, 15), DCMotor.getNEO(1), 0);
-    
-    
+
+    private MechanismLigament2d leftIntakeViz1 = leftIntakeRoot
+            .append(new MechanismLigament2d("leftIntakeViz1", 0.5, 180));
+    private MechanismLigament2d leftIntakeViz2 = leftIntakeRoot
+            .append(new MechanismLigament2d("leftIntakeViz2", -0.5, 180));
+    private MechanismLigament2d rightIntakeViz1 = rightIntakeRoot
+            .append(new MechanismLigament2d("rightIntakeViz1", 0.5, 180));
+    private MechanismLigament2d rightIntakeViz2 = rightIntakeRoot
+            .append(new MechanismLigament2d("rightIntakeViz2", -0.5, 180));
+
+    private FlywheelSim intakeSimLeft = new FlywheelSim(
+            LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), 0.0000001, 15), DCMotor.getNEO(1), 0);
+    private FlywheelSim intakeSimRight = new FlywheelSim(
+            LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), 0.0000001, 15), DCMotor.getNEO(1), 0);
+
     /* Constructor */
 
     public CoralSubsystem() {
-       
 
         if (Utils.isSimulation()) {
             leftIntakeMotorConfig = new SparkMaxConfig();
@@ -68,17 +74,18 @@ public class CoralSubsystem extends SubsystemBase {
         leftIntakeMotorConfig.idleMode(IdleMode.kBrake);
         leftIntakeMotorConfig.smartCurrentLimit(kLeftIntakeMotorCurrentLimit,
                 kLeftIntakeMotorCurrentLimit);
-        leftIntakeMotor.configure(leftIntakeMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        leftIntakeMotor.configure(leftIntakeMotorConfig, ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters);
 
         rightIntakeMotorConfig.idleMode(IdleMode.kBrake);
         rightIntakeMotorConfig.smartCurrentLimit(kRightIntakeMotorCurrentLimit,
                 kRightIntakeMotorCurrentLimit);
-        rightIntakeMotor.configure(rightIntakeMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
+        rightIntakeMotor.configure(rightIntakeMotorConfig, ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters);
 
     }
 
-public Command runIntake(double speed) {
+    public Command runIntake(double speed) {
         if (Utils.isSimulation()) {
             return runEnd(() -> {
                 simSpeed = speed;
@@ -89,35 +96,38 @@ public Command runIntake(double speed) {
             return runEnd(() -> {
                 leftIntakeMotor.set(speed);
                 rightIntakeMotor.set(-speed);
-               
 
             }, () -> {
                 leftIntakeMotor.set(0);
                 rightIntakeMotor.set(0);
-                
 
             });
         }
     }
 
-    
-
-
     @Override
     public void periodic() {
         if (Utils.isSimulation()) {
-            intakeSim.update(0.01);
-            leftIntakeViz1.setAngle(leftIntakeViz1.getAngle() + intakeSim.getAngularVelocityRPM() * 0.05);
-            leftIntakeViz2.setAngle(leftIntakeViz2.getAngle() + intakeSim.getAngularVelocityRPM() * 0.05);
-            rightIntakeViz1.setAngle(rightIntakeViz1.getAngle() + intakeSim.getAngularVelocityRPM() * 0.05);
-            rightIntakeViz2.setAngle(rightIntakeViz2.getAngle() + intakeSim.getAngularVelocityRPM() * 0.05);
-            intakeSim.setInput(simSpeed);
             
+            leftIntakeViz1.setAngle(leftIntakeViz1.getAngle() + intakeSimLeft.getAngularVelocityRPM() * 0.05);
+            leftIntakeViz2.setAngle(leftIntakeViz2.getAngle() + intakeSimLeft.getAngularVelocityRPM() * 0.05);
+            rightIntakeViz1.setAngle(rightIntakeViz1.getAngle() + intakeSimRight.getAngularVelocityRPM() * 0.05);
+            rightIntakeViz2.setAngle(rightIntakeViz2.getAngle() + intakeSimRight.getAngularVelocityRPM() * 0.05);
+            intakeSimLeft.setInput(simSpeed);
+            intakeSimRight.setInput(-simSpeed);
+            intakeSimLeft.update(0.001);
+            intakeSimRight.update(0.001);
+
+
+            if(secondarySimSpeed == 0){
+                intakeSimRight.setInput(secondarySimSpeed);
+            } else {
+                intakeSimRight.setInput(simSpeed);
+            }
+
+          
+
         }
     }
-
-
-
-
 
 }

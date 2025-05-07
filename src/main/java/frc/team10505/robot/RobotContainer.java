@@ -13,6 +13,7 @@ public class RobotContainer {
     private final CommandJoystick joystick = new CommandJoystick(0);
     private final CommandJoystick joystick2 = new CommandJoystick(1);
     private final CommandJoystick joystick3 = new CommandJoystick(2);
+    private final CommandJoystick joystick4 = new CommandJoystick(3);
     private final CommandXboxController xboxController = new CommandXboxController(1);
 
     /* Subsystems */
@@ -53,9 +54,22 @@ public class RobotContainer {
 
     private void simCoralButtonBindings() {
         if (Utils.isSimulation()) {
-            joystick3.button(1).whileTrue(coralSubsystem.runIntake(15));
+            joystick3.button(1).onTrue(coralSubsystem.runIntake(-15));
+            joystick3.button(2).onTrue(coralSubsystem.runIntake(15));
+            joystick3.button(3).onTrue(coralSubsystem.runIntake(0));
+
+
            
 
+        }
+    }
+
+    private void simElevatorButtonBindings() {
+        if (Utils.isSimulation()) {
+            joystick4.button(1).onTrue(elevatorSubsystem.setHeight(10));
+            joystick4.button(2).onTrue(elevatorSubsystem.setHeight(30));
+            joystick4.button(3).onTrue(elevatorSubsystem.setHeight(50));
+            joystick4.button(4).onTrue(elevatorSubsystem.setHeight(70));
         }
     }
 
@@ -64,6 +78,7 @@ public class RobotContainer {
             simConfigAlgaePivotButtonBindings();
             simConfigAlgaeIntakeButtonBindings();
             simCoralButtonBindings();
+            simElevatorButtonBindings();
 
         } else {
             configAlgaePivotButtonBindings();
