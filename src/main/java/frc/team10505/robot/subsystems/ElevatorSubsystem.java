@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
@@ -46,18 +47,20 @@ public class ElevatorSubsystem extends SubsystemBase {
     private DutyCycleEncoder elevatorEncoder = new DutyCycleEncoder(1);
     private int ELEVATOR_MOTOR_CURRENT_LIMIT = 30;
     private double simEncoder = 0.0;
-    private double height = 0.0;
+    private double height = 2.0;
 
     /* Motor Stuff */
     private TalonFX elevLead = new TalonFX(elevLeadId);
     private TalonFX elevFollow = new TalonFX(elevFollowId);
     private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(2);
+    private PIDController pidController;
+    private ElevatorFeedforward feedFoward;
 
     /* Sim Variables */
     private final Mechanism2d elevatorMech = new Mechanism2d(3, 6);
     private MechanismRoot2d elevatorRoot = elevatorMech.getRoot("elevRoot", 1.5, 0);
     private MechanismLigament2d elevatorViz = elevatorRoot.append(new MechanismLigament2d("elevator ligament", 10, 90,
-            70, new Color8Bit(Color.kRed)));
+            70, new Color8Bit(Color.kMediumBlue)));
     private ElevatorSim elevatorSim = new ElevatorSim(DCMotor.getKrakenX60(2),
             12, 10, 0.05, 0.0, 3.0, true, 0.6);
 
@@ -68,7 +71,9 @@ public class ElevatorSubsystem extends SubsystemBase {
             SmartDashboard.putData("elevSimMech", elevatorMech);
             elevLead = new TalonFX(elevLeadId);
             elevFollow = new TalonFX(elevFollowId);
-            motionMagicVoltage = new MotionMagicVoltage(height);
+            // motionMagicVoltage = new MotionMagicVoltage(height);
+            pidController = new PIDController(10, 10, 10);
+            feedFoward = new ElevatorFeedforward(10, 0, 10.2, 10.2);
 
         } else {
             elevLead = new TalonFX(elevLeadId);
@@ -81,21 +86,21 @@ public class ElevatorSubsystem extends SubsystemBase {
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = 12;
 
-        MotionMagicConfigs motionMagic = cfg.MotionMagic;
-        motionMagic.withMotionMagicCruiseVelocity(RotationsPerSecond.of(20))
-                .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(100));
-                
+        // MotionMagicConfigs motionMagic = cfg.MotionMagic;
+        // motionMagic.withMotionMagicCruiseVelocity(RotationsPerSecond.of(20))
+        // .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(100));
 
-        if (Utils.isSimulation()) {
-            Slot0Configs slot0 = cfg.Slot0;
-            slot0.kS = 0;
-            slot0.kV = 0.15;
-            slot0.kA = 0.15;
-            slot0.kG = 0.362;
-            slot0.kP = 0;
-            slot0.kI = 0;
-            slot0.kD = 0;
-        }
+        // if (Utils.isSimulation()) {
+        // Slot0Configs slot0 = cfg.Slot0;
+        // slot0.kS = 0;
+        // slot0.kV = 0.15;
+        // slot0.kA = 0.15;
+        // slot0.kG = 0.35429;
+        // slot0.kP = 0;
+        // slot0.kI = 0;
+        // slot0.kD = 0;
+
+        // }
 
         StatusCode leaderStatus = StatusCode.StatusCodeNotInitialized;
         for (int i = 0; i < 5; ++i) {
@@ -115,6 +120,8 @@ public class ElevatorSubsystem extends SubsystemBase {
                 break;
         }
 
+        elevFollow.setControl(new Follower(elevLead.getDeviceID(), false));
+
     }
 
     public Command setHeight(double newHeight) {
@@ -123,14 +130,31 @@ public class ElevatorSubsystem extends SubsystemBase {
         });
     }
 
+    public double getEffort() {
+        return feedFoward.calculate(0) +
+                pidController.calculate(elevatorSim.getPositionMeters(), height);
+    }
+
+    public Command setVoltage(double voltage) {
+        return runOnce(() -> {
+            elevLead.setVoltage(voltage);
+
+        });
+    }
+
     @Override
     public void periodic() {
         if (Utils.isSimulation()) {
-            var change = 0;// (height) - (elevatorViz.getLength());
-            elevatorSim.setInputVoltage(elevLead.getMotorVoltage().getValueAsDouble());
+            var change = (height) - (simEncoder);
+            
+            elevLead.setVoltage(getEffort());
+            elevatorSim.setInput(elevLead.getMotorVoltage().getValueAsDouble());
             elevatorSim.update(0.001);
             elevatorViz.setLength(elevatorSim.getPositionMeters());
-            elevLead.setControl(motionMagicVoltage.withPosition(change).withSlot(0));
+
+
+    
+            // elevLead.setControl(motionMagicVoltage.withPosition(change).withSlot(0));
             SmartDashboard.putNumber("height", height);
             SmartDashboard.putNumber("heightEncoder", elevatorEncoder.get());
             SmartDashboard.putNumber("Elevator Encoder", simEncoder);
