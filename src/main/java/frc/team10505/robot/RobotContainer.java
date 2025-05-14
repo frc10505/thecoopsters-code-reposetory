@@ -13,15 +13,14 @@ public class RobotContainer {
     private final CommandJoystick joystick = new CommandJoystick(0);
     private final CommandJoystick joystick2 = new CommandJoystick(1);
     private final CommandJoystick joystick3 = new CommandJoystick(2);
-    private final CommandJoystick joystick4 = new CommandJoystick(5);
-    private final CommandXboxController xboxController = new CommandXboxController(1);
+    private final CommandJoystick joystick4 = new CommandJoystick(3);
+    private final CommandXboxController xboxController = new CommandXboxController(0);
 
     /* Subsystems */
     private final AlgaeSubsystem algaeSubsys = new AlgaeSubsystem();
     private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
     private final CoralSubsystem coralSubsystem = new CoralSubsystem();
 
-    /* Algae Pivot Controls Sim */
     private void simConfigAlgaePivotButtonBindings() {
         if (Utils.isSimulation()) {
             joystick.button(1).onTrue(algaeSubsys.setAngle(90));
@@ -33,14 +32,22 @@ public class RobotContainer {
 
     /* Algae Pivot Controls */
     private void configAlgaePivotButtonBindings() {
-        if (Utils.isSimulation()) {
-            xboxController.x().onTrue(algaeSubsys.setAngle(90));
-            xboxController.y().onTrue(algaeSubsys.setAngle(45));
-            xboxController.b().onTrue(algaeSubsys.setAngle(-45));
-            xboxController.a().onTrue(algaeSubsys.setAngle(-90));
+        xboxController.x().onTrue(algaeSubsys.setAngle(90));
+        xboxController.y().onTrue(algaeSubsys.setAngle(45));
+        xboxController.b().onTrue(algaeSubsys.setAngle(-25.67));//Roasted Toasted
+        xboxController.a().onTrue(algaeSubsys.setAngle(0));
+
+    }
+
+    private void configAlgaeIntakeButtonBindings() {
+        {
+            xboxController.leftTrigger().whileTrue(algaeSubsys.runIntake(0.8));
+            xboxController.rightTrigger().whileTrue(algaeSubsys.runIntake(-0.8));
+            xboxController.rightBumper().onTrue(algaeSubsys.runIntake(0));
+
         }
     }
-    
+
     /* Algae Intake Controls Sim */
     private void simConfigAlgaeIntakeButtonBindings() {
         if (Utils.isSimulation()) {
@@ -51,15 +58,11 @@ public class RobotContainer {
         }
     }
 
-
     private void simCoralButtonBindings() {
         if (Utils.isSimulation()) {
             joystick3.button(1).onTrue(coralSubsystem.runIntake(-15));
             joystick3.button(2).onTrue(coralSubsystem.runIntake(15));
             joystick3.button(3).onTrue(coralSubsystem.runIntake(0));
-
-
-           
 
         }
     }
@@ -82,6 +85,7 @@ public class RobotContainer {
 
         } else {
             configAlgaePivotButtonBindings();
+            configAlgaeIntakeButtonBindings();
 
         }
     }

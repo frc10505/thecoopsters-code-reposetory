@@ -37,8 +37,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class AlgaeSubsystem extends SubsystemBase {
 
-    private final int kAlgaeIntakeMotorID = 41;
-    private final int kAlgaePivotMotorID = 40;
+    private final int kAlgaeIntakeMotorID = 7;
+    private final int kAlgaePivotMotorID = 8;
 
     private final double startingAngle = 0.0;
 
@@ -55,8 +55,8 @@ public class AlgaeSubsystem extends SubsystemBase {
     private double encoderValue;
     private double simEncoder = startingAngle;
 
-    private final static int kPivotMotorCurrentLimit = 8;
-    private final static int kIntakeMotorCurrentLimit = 15;
+    private final static int kPivotMotorCurrentLimit = 15;
+    private final static int kIntakeMotorCurrentLimit = 25;
     private final static int pivotEncoderScale = 360;
     private final static int pivotEncoderOffset = 0;
 
@@ -66,6 +66,7 @@ public class AlgaeSubsystem extends SubsystemBase {
     private SparkMax intakeMotor = new SparkMax(kAlgaeIntakeMotorID, MotorType.kBrushless);
     private SparkMaxConfig pivotMotorConfig = new SparkMaxConfig();
     private SparkMaxConfig intakeMotorConfig = new SparkMaxConfig();
+    
     
 
     /* PID FeedFoward */
@@ -102,14 +103,12 @@ public class AlgaeSubsystem extends SubsystemBase {
 
             // pivotMotor = new SparkMax(kAlgaePivotMotorID, MotorType.kBrushless);
             // intakeMotor = new SparkMax(kAlgaeIntakeMotorID, MotorType.kBrushless);
-            pivotMotorConfig = new SparkMaxConfig();
-            intakeMotorConfig = new SparkMaxConfig();
+        
 
         } else {
-            pivotMotor = new SparkMax(kAlgaePivotMotorID, MotorType.kBrushless);
-            intakeMotor = new SparkMax(kAlgaeIntakeMotorID, MotorType.kBrushless);
-            pivotController = new PIDController(1.25, 0, 0.01);
-            pivotFeedForward = new ArmFeedforward(0, 0.17227, 0.2, 0.2);
+          
+            pivotController = new PIDController(0.105, 0, 0);
+            pivotFeedForward = new ArmFeedforward(0.1, 0.08, 0.1, 0.1);
         }
         // Pivot motor config
         pivotMotorConfig.idleMode(IdleMode.kBrake);
@@ -146,6 +145,7 @@ public class AlgaeSubsystem extends SubsystemBase {
     public Command setAngle(double angle) {
         return run(() -> {
             pivotSetPoint = angle;
+            
         });
 
     }
@@ -246,6 +246,9 @@ public class AlgaeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Intake Motor Output", intakeMotor.getAppliedOutput());
             SmartDashboard.putNumber("Pivot Motor Output", pivotMotor.getAppliedOutput());
 
+        } else {
+            pivotMotor.setVoltage(getEffort());
+            SmartDashboard.putNumber("PivotEncoder", getPivotEncoder());
         }
     }
 

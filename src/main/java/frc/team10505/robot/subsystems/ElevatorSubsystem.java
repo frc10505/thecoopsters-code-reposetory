@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Second;
 
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -14,6 +15,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
@@ -34,8 +36,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class ElevatorSubsystem extends SubsystemBase {
 
     /* Motor Id and Gear Stack */
-    public final int elevLeadId = 30;
-    public final int elevFollowId = 31;
+    public final int elevLeadId = 10;
+    public final int elevFollowId = 11;
     private int ELEVATOR_GEARSTACK = 12;
     private double True = 0;
 
@@ -45,16 +47,16 @@ public class ElevatorSubsystem extends SubsystemBase {
     /* Random Things */
     public Boolean usePID = true;
     private DutyCycleEncoder elevatorEncoder = new DutyCycleEncoder(1);
-    private int ELEVATOR_MOTOR_CURRENT_LIMIT = 30;
+    private int ELEVATOR_MOTOR_CURRENT_LIMIT = 40;
     private double simEncoder = 0.0;
-    private double height = 2.0;
+    private double height = 0;
 
     /* Motor Stuff */
     private TalonFX elevLead = new TalonFX(elevLeadId);
     private TalonFX elevFollow = new TalonFX(elevFollowId);
-    private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(2);
+    // private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(2);
     private PIDController pidController;
-    private ElevatorFeedforward feedFoward;
+    private ElevatorFeedforward feedFoRward;
 
     /* Sim Variables */
     private final Mechanism2d elevatorMech = new Mechanism2d(3, 6);
@@ -72,19 +74,21 @@ public class ElevatorSubsystem extends SubsystemBase {
             elevLead = new TalonFX(elevLeadId);
             elevFollow = new TalonFX(elevFollowId);
             // motionMagicVoltage = new MotionMagicVoltage(height);
-            pidController = new PIDController(10, 10, 10);
-            feedFoward = new ElevatorFeedforward(10, 0, 10.2, 10.2);
+            pidController = new PIDController(1, 0, 0);
+            feedFoRward = new ElevatorFeedforward(0, 0.18157, 0.2, 0.2);
 
         } else {
-            elevLead = new TalonFX(elevLeadId);
-            elevFollow = new TalonFX(elevFollowId);
+            elevLead = new TalonFX(elevLeadId, "kingKan");
+            elevFollow = new TalonFX(elevFollowId, "kingKan");
+            pidController = new PIDController(0, 0, 0);
+            feedFoRward = new ElevatorFeedforward(0, 0, 0, 0);
 
         }
 
-        TalonFXConfiguration cfg = new TalonFXConfiguration();
+        // TalonFXConfiguration cfg = new TalonFXConfiguration();
 
-        FeedbackConfigs fdb = cfg.Feedback;
-        fdb.SensorToMechanismRatio = 12;
+        // FeedbackConfigs fdb = cfg.Feedback;
+        // fdb.SensorToMechanismRatio = 12;
 
         // MotionMagicConfigs motionMagic = cfg.MotionMagic;
         // motionMagic.withMotionMagicCruiseVelocity(RotationsPerSecond.of(20))
@@ -101,27 +105,45 @@ public class ElevatorSubsystem extends SubsystemBase {
         // slot0.kD = 0;
 
         // }
+        var motorConfig = new MotorOutputConfigs();
 
+        var limitConfigs = new CurrentLimitsConfigs();
+        limitConfigs.StatorCurrentLimit = ELEVATOR_MOTOR_CURRENT_LIMIT;
+        limitConfigs.StatorCurrentLimitEnable = true;
+
+        motorConfig.NeutralMode = NeutralModeValue.Brake;
+        elevLead.getConfigurator().apply(motorConfig);
+        elevLead.getConfigurator().apply(limitConfigs);
+
+        elevFollow.getConfigurator().apply(motorConfig);
+        elevFollow.getConfigurator().apply(limitConfigs);
         StatusCode leaderStatus = StatusCode.StatusCodeNotInitialized;
-        for (int i = 0; i < 5; ++i) {
-            leaderStatus = elevLead.getConfigurator().apply(cfg);
-            if (leaderStatus.isOK())
-                break;
-        }
-        if (!leaderStatus.isOK()) {
-            System.out.println("Could not configure Elevator Motor. Error: " +
-                    leaderStatus.toString());
-        }
 
-        StatusCode followerStatus = StatusCode.StatusCodeNotInitialized;
-        for (int i = 0; i < 5; ++i) {
-            followerStatus = elevFollow.getConfigurator().apply(cfg);
-            if (followerStatus.isOK())
-                break;
-        }
+        // for (int i = 0; i < 5; ++i) {
+        // leaderStatus = elevLead.getConfigurator().apply(cfg);
+        // if (leaderStatus.isOK())
+        // break;
+        // }
+        // if (!leaderStatus.isOK()) {
+        // System.out.println("Could not configure Elevator Motor. Error: " +
+        // leaderStatus.toString());
+        // }
+
+        // StatusCode followerStatus = StatusCode.StatusCodeNotInitialized;
+        // for (int i = 0; i < 5; ++i) {
+        // followerStatus = elevFollow.getConfigurator().apply(cfg);
+        // if (followerStatus.isOK())
+        // break;
+        // }
 
         elevFollow.setControl(new Follower(elevLead.getDeviceID(), false));
 
+    }
+
+    private double getEncoder() {
+        return (elevLead.getRotorPosition().getValueAsDouble() * (Math.PI * 1.751 * 2) / 12.0) * -1.0;
+        
+        
     }
 
     public Command setHeight(double newHeight) {
@@ -131,8 +153,14 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public double getEffort() {
-        return feedFoward.calculate(0) +
-                pidController.calculate(elevatorSim.getPositionMeters(), height);
+        if (Utils.isSimulation()) {
+            return feedFoRward.calculate(0) +
+                    pidController.calculate(elevatorSim.getPositionMeters(), height);
+        } else {
+            return feedFoRward.calculate(0) +
+            pidController.calculate(getEncoder(), height);
+        }
+
     }
 
     public Command setVoltage(double voltage) {
@@ -146,14 +174,12 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void periodic() {
         if (Utils.isSimulation()) {
             var change = (height) - (simEncoder);
-            
+
             elevLead.setVoltage(getEffort());
-            elevatorSim.setInput(elevLead.getMotorVoltage().getValueAsDouble());
+            elevatorSim.setInput(elevLead.getMotorVoltage().getValueAsDouble() * 2);
             elevatorSim.update(0.001);
             elevatorViz.setLength(elevatorSim.getPositionMeters());
 
-
-    
             // elevLead.setControl(motionMagicVoltage.withPosition(change).withSlot(0));
             SmartDashboard.putNumber("height", height);
             SmartDashboard.putNumber("heightEncoder", elevatorEncoder.get());
@@ -164,6 +190,9 @@ public class ElevatorSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Elevator Height", height);
             SmartDashboard.putNumber("sim elev position", elevatorSim.getPositionMeters());
             SmartDashboard.putNumber("sim elev motor position", elevLead.getPosition().getValueAsDouble());
+
+        } else {
+            // elevLead.setVoltage(-getEffort());
 
         }
     }

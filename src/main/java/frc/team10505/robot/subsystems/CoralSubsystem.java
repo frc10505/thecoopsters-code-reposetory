@@ -23,13 +23,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class CoralSubsystem extends SubsystemBase {
 
     /* Motor Ids */
-    private final int leftIntakeMotorId = 20;
-    private final int rightIntakeMotorId = 21;
+    private final int leftIntakeMotorId = 2;
+    private final int rightIntakeMotorId = 3;
     private SparkMaxConfig leftIntakeMotorConfig = new SparkMaxConfig();
     private SparkMaxConfig rightIntakeMotorConfig = new SparkMaxConfig();
 
-    private final static int kLeftIntakeMotorCurrentLimit = 30;
-    private final static int kRightIntakeMotorCurrentLimit = 30;
+    private final static int kLeftIntakeMotorCurrentLimit = 15;
+    private final static int kRightIntakeMotorCurrentLimit = 15;
 
     /* Coral Intake speeds */
     private double intakeCoral = 20;
@@ -65,8 +65,6 @@ public class CoralSubsystem extends SubsystemBase {
     public CoralSubsystem() {
 
         if (Utils.isSimulation()) {
-            leftIntakeMotorConfig = new SparkMaxConfig();
-            rightIntakeMotorConfig = new SparkMaxConfig();
             SmartDashboard.putData("Coral Intake", intakeMech);
         } else {
 
