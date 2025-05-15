@@ -70,12 +70,12 @@ public class ElevatorSubsystem extends SubsystemBase {
     public ElevatorSubsystem() {
 
         if (Utils.isSimulation()) {
-            SmartDashboard.putData("elevSimMech", elevatorMech);
+            SmartDashboard.putData("Elevator Sim", elevatorMech);
             elevLead = new TalonFX(elevLeadId);
             elevFollow = new TalonFX(elevFollowId);
             // motionMagicVoltage = new MotionMagicVoltage(height);
             pidController = new PIDController(1, 0, 0);
-            feedFoRward = new ElevatorFeedforward(0, 0.18157, 0.2, 0.2);
+            feedFoRward = new ElevatorFeedforward(0, 0.775, 0.2, 0.2);
 
         } else {
             elevLead = new TalonFX(elevLeadId, "kingKan");
@@ -142,8 +142,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     private double getEncoder() {
         return (elevLead.getRotorPosition().getValueAsDouble() * (Math.PI * 1.751 * 2) / 12.0) * -1.0;
-        
-        
+
     }
 
     public Command setHeight(double newHeight) {
@@ -158,7 +157,7 @@ public class ElevatorSubsystem extends SubsystemBase {
                     pidController.calculate(elevatorSim.getPositionMeters(), height);
         } else {
             return feedFoRward.calculate(0) +
-            pidController.calculate(getEncoder(), height);
+                    pidController.calculate(getEncoder(), height);
         }
 
     }
