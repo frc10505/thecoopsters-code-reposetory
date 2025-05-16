@@ -74,9 +74,9 @@ public class RobotContainer {
     private void elevatorButtonBindings() {
         if (Utils.isSimulation()) {
             joystick4.button(1).onTrue(elevatorSubsystem.setHeight(0));
-            joystick4.button(2).onTrue(elevatorSubsystem.setHeight(2));
-            joystick4.button(3).onTrue(elevatorSubsystem.setHeight(4));
-            joystick4.button(4).onTrue(elevatorSubsystem.setHeight(6));
+            joystick4.button(2).onTrue(elevatorSubsystem.setHeight(20));
+            joystick4.button(3).onTrue(elevatorSubsystem.setHeight(40));
+            joystick4.button(4).onTrue(elevatorSubsystem.setHeight(60));
         } else {
             operatorController.a().onTrue(elevatorSubsystem.setHeight(0));
             operatorController.b().onTrue(elevatorSubsystem.setHeight(0));

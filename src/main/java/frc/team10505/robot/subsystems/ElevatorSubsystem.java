@@ -49,14 +49,27 @@ public class ElevatorSubsystem extends SubsystemBase {
     private DutyCycleEncoder elevatorEncoder = new DutyCycleEncoder(1);
     private int ELEVATOR_MOTOR_CURRENT_LIMIT = 40;
     private double simEncoder = 0.0;
-    private double height = 0;
+    private double height = 10;
+
+    /* PID Fancy */
+
+    public static double KP;
+    public static double KI;
+    public static double KD;
+
+    /* Feed forward Fancy */
+
+    public static double KS;
+    public static double KG;
+    public static double KV;
+    public static double KA;
 
     /* Motor Stuff */
     private TalonFX elevLead = new TalonFX(elevLeadId);
     private TalonFX elevFollow = new TalonFX(elevFollowId);
     // private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(2);
-    private PIDController pidController;
-    private ElevatorFeedforward feedFoRward;
+    private PIDController pidController = new PIDController(KP, KI, KD);
+    private ElevatorFeedforward feedFoRward = new ElevatorFeedforward(KS, KG, KV, KA);
 
     /* Sim Variables */
     private final Mechanism2d elevatorMech = new Mechanism2d(3, 6);
@@ -74,8 +87,8 @@ public class ElevatorSubsystem extends SubsystemBase {
             elevLead = new TalonFX(elevLeadId);
             elevFollow = new TalonFX(elevFollowId);
             // motionMagicVoltage = new MotionMagicVoltage(height);
-            pidController = new PIDController(1, 0, 0);
-            feedFoRward = new ElevatorFeedforward(0, 0.775, 0.2, 0.2);
+            pidController = new PIDController(0.105, 0, 0);
+            feedFoRward = new ElevatorFeedforward(1, .1799999, 0.2, 0.2);
 
         } else {
             elevLead = new TalonFX(elevLeadId, "kingKan");
@@ -85,24 +98,24 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         }
 
-        // TalonFXConfiguration cfg = new TalonFXConfiguration();
+        TalonFXConfiguration cfg = new TalonFXConfiguration();
 
-        // FeedbackConfigs fdb = cfg.Feedback;
-        // fdb.SensorToMechanismRatio = 12;
+        FeedbackConfigs fdb = cfg.Feedback;
+        fdb.SensorToMechanismRatio = 12;
 
-        // MotionMagicConfigs motionMagic = cfg.MotionMagic;
-        // motionMagic.withMotionMagicCruiseVelocity(RotationsPerSecond.of(20))
-        // .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(100));
+        MotionMagicConfigs motionMagic = cfg.MotionMagic;
+        motionMagic.withMotionMagicCruiseVelocity(RotationsPerSecond.of(20))
+                .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(100));
 
         // if (Utils.isSimulation()) {
         // Slot0Configs slot0 = cfg.Slot0;
-        // slot0.kS = 0;
-        // slot0.kV = 0.15;
-        // slot0.kA = 0.15;
-        // slot0.kG = 0.35429;
-        // slot0.kP = 0;
-        // slot0.kI = 0;
-        // slot0.kD = 0;
+        // slot0.kS = 150000;
+        // slot0.kV = 150000;
+        // slot0.kA = 150000;
+        // slot0.kG = 150000;
+        // slot0.kP = 150000;
+        // slot0.kI = 150000;
+        // slot0.kD = 150000;
 
         // }
         var motorConfig = new MotorOutputConfigs();
@@ -154,7 +167,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public double getEffort() {
         if (Utils.isSimulation()) {
             return feedFoRward.calculate(0) +
-                    pidController.calculate(elevatorSim.getPositionMeters(), height);
+                    pidController.calculate(height);
         } else {
             return feedFoRward.calculate(0) +
                     pidController.calculate(getEncoder(), height);
@@ -173,11 +186,12 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void periodic() {
         if (Utils.isSimulation()) {
             var change = (height) - (simEncoder);
-
-            elevLead.setVoltage(getEffort());
+            simEncoder = elevatorViz.getLength();
+            // elevLead.setVoltage(getEffort());
             elevatorSim.setInput(elevLead.getMotorVoltage().getValueAsDouble() * 2);
             elevatorSim.update(0.001);
             elevatorViz.setLength(elevatorSim.getPositionMeters());
+            elevLead.setVoltage(getEffort());
 
             // elevLead.setControl(motionMagicVoltage.withPosition(change).withSlot(0));
             SmartDashboard.putNumber("height", height);
