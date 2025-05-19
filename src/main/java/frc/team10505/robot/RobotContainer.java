@@ -33,13 +33,13 @@ public class RobotContainer {
         }
     }
 
-    private void algaePivotButtonBindings() {
-        if (Utils.isSimulation()) {
+    private void algaePivotButtonBindings() {//cooper is a bafoon
+    
             driverController.x().onTrue(algaeSubsys.setAngle(90));
             driverController.y().onTrue(algaeSubsys.setAngle(45));
             driverController.b().onTrue(algaeSubsys.setAngle(-25.67));// Roasted Toasted
             driverController.a().onTrue(algaeSubsys.setAngle(0));
-        }
+        
     }
 
     private void algaeIntakeButtonBindings() {

@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class AlgaeSubsystem extends SubsystemBase {
@@ -50,7 +51,7 @@ public class AlgaeSubsystem extends SubsystemBase {
     private double simSpeed = 0;
 
     /* Pivot Stuff */
-    private double pivotSetPoint = 90.0;
+    private double pivotSetPoint = 0.0;
     private double absoluteOffset = 180.0;
     private double encoderValue;
     private double simEncoder = startingAngle;
@@ -98,12 +99,12 @@ public class AlgaeSubsystem extends SubsystemBase {
 
         if (Utils.isSimulation()) {
             pivotController = new PIDController(1.55, 0, 0.01); // Gooder?
-            pivotFeedForward = new ArmFeedforward(0, 0.17227, 0.2, 0.2); // Gooder?
+            pivotFeedForward = new ArmFeedforward(0, 0.17227, 0.1, 0.1); // Gooder?
 
         } else {
 
             pivotController = new PIDController(0.105, 0, 0);
-            pivotFeedForward = new ArmFeedforward(0.1, 0.08, 0.1, 0.1);
+            pivotFeedForward = new ArmFeedforward(0.05, 0.08, 0.06, 0.06); // KV and KA 0.06 = gooder
         }
         // Pivot motor config
         pivotMotorConfig.idleMode(IdleMode.kBrake);
@@ -131,14 +132,20 @@ public class AlgaeSubsystem extends SubsystemBase {
     }
 
     public double getEffort() {
-        return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0)
-                + pivotController.calculate(getPivotEncoder(), pivotSetPoint);
+        if (Utils.isSimulation()) {
+            return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0);
+
+        } else {
+            return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0)
+                    + pivotController.calculate(getPivotEncoder(), pivotSetPoint);
+        }
+
     }
 
     /* Pivot Commands to Referance */
 
     public Command setAngle(double angle) {
-        return run(() -> {
+        return runOnce(() -> {
             pivotSetPoint = angle;
 
         });
@@ -166,6 +173,14 @@ public class AlgaeSubsystem extends SubsystemBase {
         });
     }
 
+    // public Command releaseAlgae() {
+    //     return Commands.sequence(
+    //             intakeAlgae(-0.5),
+    //             setAngle(-25.67)
+
+    //     );
+    // }
+
     /* Intake Commands to Referance */
 
     public Command runIntake(double speed) {
@@ -185,6 +200,13 @@ public class AlgaeSubsystem extends SubsystemBase {
             });
         }
     }
+
+    // public Command intakeAlgae(double speed) {
+    //     return runOnce(() -> {
+    //         intakeMotor.set(speed);
+
+    //     });
+    // }
 
     public Command intakeSpaz() {
         return run(() -> {
@@ -216,6 +238,8 @@ public class AlgaeSubsystem extends SubsystemBase {
         } else {
             pivotMotor.setVoltage(getEffort());
             SmartDashboard.putNumber("PivotEncoder", getPivotEncoder());
+            SmartDashboard.putNumber("Pivot Motor Output", pivotMotor.getAppliedOutput());
+            SmartDashboard.putNumber(" pivot calculated effort", pivotMotor.getMotorTemperature());
         }
     }
 
