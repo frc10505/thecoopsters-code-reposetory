@@ -41,7 +41,7 @@ public class AlgaeSubsystem extends SubsystemBase {
     private final int kAlgaeIntakeMotorID = 7;
     private final int kAlgaePivotMotorID = 8;
 
-    private final double startingAngle = 0.0;
+    private final double startingAngle = 90.0;
 
     /* Intake Speeds */
     private double intakeSpeed = 15;
@@ -79,7 +79,7 @@ public class AlgaeSubsystem extends SubsystemBase {
     private MechanismRoot2d pivotRoot = pivotMech.getRoot("pivotRoot", 1, 1.25);
     private MechanismLigament2d pivotViz = pivotRoot.append(new MechanismLigament2d("pivotViz", 0.75, startingAngle));
     private SingleJointedArmSim pivotSim = new SingleJointedArmSim(DCMotor.getNEO(1), 80,
-            SingleJointedArmSim.estimateMOI(0.305, 2), 0.305, Units.degreesToRadians(-110), Units.degreesToRadians(110),
+            SingleJointedArmSim.estimateMOI(0.305, 2), 0.305, Units.degreesToRadians(-90), Units.degreesToRadians(90),
             true, Units.degreesToRadians(startingAngle));
 
     /* Intake Sim */
@@ -98,7 +98,7 @@ public class AlgaeSubsystem extends SubsystemBase {
         SmartDashboard.putData("Algae intake sim ", intakeMech);
 
         if (Utils.isSimulation()) {
-            pivotController = new PIDController(1.55, 0, 0.01); // Gooder?
+            pivotController = new PIDController(2.55, 0, 0.05); // Gooder?
             pivotFeedForward = new ArmFeedforward(0, 0.17227, 0.1, 0.1); // Gooder?
 
         } else {
@@ -133,7 +133,8 @@ public class AlgaeSubsystem extends SubsystemBase {
 
     public double getEffort() {
         if (Utils.isSimulation()) {
-            return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0);
+            return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0)
+                    + pivotController.calculate(getPivotEncoder(), pivotSetPoint);
 
         } else {
             return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0)
@@ -173,14 +174,6 @@ public class AlgaeSubsystem extends SubsystemBase {
         });
     }
 
-    // public Command releaseAlgae() {
-    //     return Commands.sequence(
-    //             intakeAlgae(-0.5),
-    //             setAngle(-25.67)
-
-    //     );
-    // }
-
     /* Intake Commands to Referance */
 
     public Command runIntake(double speed) {
@@ -200,13 +193,6 @@ public class AlgaeSubsystem extends SubsystemBase {
             });
         }
     }
-
-    // public Command intakeAlgae(double speed) {
-    //     return runOnce(() -> {
-    //         intakeMotor.set(speed);
-
-    //     });
-    // }
 
     public Command intakeSpaz() {
         return run(() -> {
