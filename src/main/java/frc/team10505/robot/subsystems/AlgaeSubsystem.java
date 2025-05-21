@@ -21,6 +21,7 @@ import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
@@ -98,7 +99,7 @@ public class AlgaeSubsystem extends SubsystemBase {
         SmartDashboard.putData("Algae intake sim ", intakeMech);
 
         if (Utils.isSimulation()) {
-            pivotController = new PIDController(1.55, 0, 0.01); // Gooder?
+            pivotController = new PIDController(8.55, 0, 0.4); // Gooder?
             pivotFeedForward = new ArmFeedforward(0, 0.17227, 0.1, 0.1); // Gooder?
 
         } else {
@@ -133,7 +134,8 @@ public class AlgaeSubsystem extends SubsystemBase {
 
     public double getEffort() {
         if (Utils.isSimulation()) {
-            return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0);
+            return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0)
+             + pivotController.calculate(pivotViz.getAngle(), pivotSetPoint);
 
         } else {
             return pivotFeedForward.calculate(Units.degreesToRadians(getPivotEncoder()), 0)

@@ -1,15 +1,20 @@
 package frc.team10505.robot;
 
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.ParentConfiguration;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.team10505.robot.generated.TunerConstants;
 import frc.team10505.robot.subsystems.AlgaeSubsystem;
 import frc.team10505.robot.subsystems.CoralSubsystem;
+import frc.team10505.robot.subsystems.DrivetrainSubsystem;
 import frc.team10505.robot.subsystems.ElevatorSubsystem;
 
 public class RobotContainer {
@@ -25,7 +30,7 @@ public class RobotContainer {
     private final AlgaeSubsystem algaeSubsys = new AlgaeSubsystem();
     private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
     private final CoralSubsystem coralSubsystem = new CoralSubsystem();
-
+    private final DrivetrainSubsystem driveTrainSubsys = TunerConstants.createDrivetrain();
     /* Algae Controls */
 
     private void simAlgaePivotButtonBindings() {
@@ -37,13 +42,13 @@ public class RobotContainer {
         }
     }
 
-    private void algaePivotButtonBindings() {//cooper is a bafoon
-    
-            driverController.x().onTrue(algaeSubsys.setAngle(90));
-            driverController.y().onTrue(algaeSubsys.setAngle(45));
-            driverController.b().onTrue(algaeSubsys.setAngle(-25.67));// Roasted Toasted
-            driverController.a().onTrue(algaeSubsys.setAngle(0));
-        
+    private void algaePivotButtonBindings() {// cooper is a bafoon
+
+        driverController.x().onTrue(algaeSubsys.setAngle(90));
+        driverController.y().onTrue(algaeSubsys.setAngle(45));
+        driverController.b().onTrue(algaeSubsys.setAngle(-25.67));// Roasted Toasted
+        driverController.a().onTrue(algaeSubsys.setAngle(0));
+
     }
 
     private void algaeIntakeButtonBindings() {
@@ -68,8 +73,8 @@ public class RobotContainer {
             joystick3.button(3).onTrue(coralSubsystem.runIntake(0));
 
         } else {
-            operatorController.povDown().whileTrue(coralSubsystem.runIntake(0));
-            operatorController.povLeft().onTrue(coralSubsystem.runIntake(0));
+            driverController.povDown().onTrue(coralSubsystem.runIntake(0));
+            driverController.povUp().onTrue(coralSubsystem.runIntake(0.2));
         }
     }
 
@@ -85,11 +90,11 @@ public class RobotContainer {
             operatorController.a().onTrue(elevatorSubsystem.setHeight(0));
             operatorController.b().onTrue(elevatorSubsystem.setHeight(0));
             operatorController.y().onTrue(elevatorSubsystem.setHeight(0));
-            operatorController.x().onTrue(elevatorSubsystem.setHeight(0 / 0));
+            operatorController.x().onTrue(elevatorSubsystem.setHeight(0));
         }
     }
 
-    private SendableChooser<Command> autonChooser;
+    private final SendableChooser<Command> autonChooser;
 
     /* Contructor */
 
@@ -103,12 +108,14 @@ public class RobotContainer {
         } else {
             algaePivotButtonBindings();
             algaeIntakeButtonBindings();
-
+            coralButtonBindings();
 
         }
-
+        NamedCommands.registerCommand("test", Commands.print("donny will never get makayla"));
+        driveTrainSubsys.configPathPlanner();
         autonChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autonChooser);
+
     }
 
 }

@@ -167,7 +167,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public double getEffort() {
         if (Utils.isSimulation()) {
             return feedFoRward.calculate(0) +
-                    pidController.calculate(height);
+                    pidController.calculate(ELEVATOR_MOTOR_CURRENT_LIMIT, ELEVATOR_GEARSTACK);
         } else {
             return feedFoRward.calculate(0) +
                     pidController.calculate(getEncoder(), height);

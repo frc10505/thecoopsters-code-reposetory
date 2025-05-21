@@ -2,6 +2,7 @@ package frc.team10505.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.io.ObjectInputFilter.Config;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -226,10 +227,22 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public void configPathPlanner() {
         try {
+            var config = RobotConfig.fromGUISettings();
 
-        }catch(Exception e) {
-    } 
+            AutoBuilder.configure(() -> getState().Pose, this::resetPose, () -> getState().Speeds,
+                    (speeds, feedforwards) -> setControl(
+                            m_pathApplyRobotSpeeds.withSpeeds(speeds)
+                                    .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                                    .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
+                    new PPHolonomicDriveController(
+                            new PIDConstants(10, 0, 0), // drive
+                            new PIDConstants(7, 0, 0)), // Rotation
+                    config,
+                    () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                    this);
 
+        } catch (Exception e) {
+            DriverStation.reportError("PathPlanner config failed like donny trying to pull makayla urah urah urah urah urah urah yragb yrag urah urah urag urag urah urah urah rua ruag ruah", e.getStackTrace());
+        }
     }
-
 }
