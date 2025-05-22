@@ -68,8 +68,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     private TalonFX elevLead = new TalonFX(elevLeadId);
     private TalonFX elevFollow = new TalonFX(elevFollowId);
     // private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(2);
-    private PIDController pidController = new PIDController(KP, KI, KD);
-    private ElevatorFeedforward feedFoRward = new ElevatorFeedforward(KS, KG, KV, KA);
+    private PIDController pidController; // = new PIDController(KP, KI, KD);
+    private ElevatorFeedforward feedFoRward;// = new ElevatorFeedforward(KS, KG, KV, KA);
 
     /* Sim Variables */
     private final Mechanism2d elevatorMech = new Mechanism2d(3, 6);
@@ -87,8 +87,8 @@ public class ElevatorSubsystem extends SubsystemBase {
             elevLead = new TalonFX(elevLeadId);
             elevFollow = new TalonFX(elevFollowId);
             // motionMagicVoltage = new MotionMagicVoltage(height);
-            pidController = new PIDController(0.105, 0, 0);
-            feedFoRward = new ElevatorFeedforward(1, .1799999, 0.2, 0.2);
+            pidController = new PIDController(1, 0, 0);
+            feedFoRward = new ElevatorFeedforward(0, 0.1795, 0.2, 0.2);
 
         } else {
             elevLead = new TalonFX(elevLeadId, "kingKan");
@@ -103,19 +103,19 @@ public class ElevatorSubsystem extends SubsystemBase {
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = 12;
 
-        MotionMagicConfigs motionMagic = cfg.MotionMagic;
-        motionMagic.withMotionMagicCruiseVelocity(RotationsPerSecond.of(20))
-                .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(100));
+        // MotionMagicConfigs motionMagic = cfg.MotionMagic;
+        // motionMagic.withMotionMagicCruiseVelocity(RotationsPerSecond.of(20))
+        // .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(100));
 
         // if (Utils.isSimulation()) {
         // Slot0Configs slot0 = cfg.Slot0;
-        // slot0.kS = 150000;
-        // slot0.kV = 150000;
-        // slot0.kA = 150000;
-        // slot0.kG = 150000;
-        // slot0.kP = 150000;
-        // slot0.kI = 150000;
-        // slot0.kD = 150000;
+        // slot0.kS = 0;
+        // slot0.kV = 0;
+        // slot0.kA = 0;
+        // slot0.kG = 50;
+        // slot0.kP = 0;
+        // slot0.kI = 0;
+        // slot0.kD = 0;
 
         // }
         var motorConfig = new MotorOutputConfigs();
@@ -187,11 +187,11 @@ public class ElevatorSubsystem extends SubsystemBase {
         if (Utils.isSimulation()) {
             var change = (height) - (simEncoder);
             simEncoder = elevatorViz.getLength();
-            // elevLead.setVoltage(getEffort());
-            elevatorSim.setInput(elevLead.getMotorVoltage().getValueAsDouble() * 2);
-            elevatorSim.update(0.001);
-            elevatorViz.setLength(elevatorSim.getPositionMeters());
             elevLead.setVoltage(getEffort());
+            // elevatorSim.setInput(elevLead.getMotorVoltage().getValueAsDouble() * 2);
+            elevatorSim.update(0.01);
+            elevatorViz.setLength(elevatorSim.getPositionMeters());
+            // elevatorSim.setInput(getEffort());
 
             // elevLead.setControl(motionMagicVoltage.withPosition(change).withSlot(0));
             SmartDashboard.putNumber("height", height);
