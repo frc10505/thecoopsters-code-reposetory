@@ -94,7 +94,7 @@ public class RobotContainer {
         }
     }
 
-    private final SendableChooser<Command> autonChooser;
+    // private final SendableChooser<Command> autonChooser;
 
     /* Contructor */
 
@@ -111,10 +111,11 @@ public class RobotContainer {
             coralButtonBindings();
 
         }
-        NamedCommands.registerCommand("test", Commands.print("donny will never get makayla"));
-        driveTrainSubsys.configPathPlanner();
-        autonChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("Auto Chooser", autonChooser);
+        // NamedCommands.registerCommand("test", Commands.print("donny will never get
+        // makayla"));
+        // driveTrainSubsys.configPathPlanner();
+        // autonChooser = AutoBuilder.buildAutoChooser();
+        // SmartDashboard.putData("Auto Chooser", autonChooser);
 
     }
 
